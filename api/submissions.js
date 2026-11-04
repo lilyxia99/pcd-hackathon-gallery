@@ -5,12 +5,12 @@
 //   GET  /api/submissions -> visible entries, oldest first
 //   POST /api/submissions -> create one entry (always visible)
 //
-// Notion property map (data source 40e401da-165b-80a3-b3f4-000ba4c02f58):
+// Notion property map (database "PCD Hackathon"; its data source is 40e401da-165b-80a3-b3f4-000ba4c02f58):
 //   Name (title), 作者 (text), 主题 (select GIFT/FREEDOM),
 //   类型 (select sketch/media), 作品链接 (url), GitHub (url),
 //   截图/GIF (url), 显示 (checkbox)
 
-var DB_ID = "40e401da-165b-80a3-b3f4-000ba4c02f58";
+var DB_ID = "40e401da-165b-8090-a0df-f9cdc98a281d";  // database PAGE id (not the data-source id: /v1/databases expects the database id)
 var NOTION_VERSION = "2022-06-28";
 
 function plainText(arr) {
