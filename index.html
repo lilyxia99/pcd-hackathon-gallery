@@ -24,10 +24,6 @@
   header .themes b{color:var(--pink);font-weight:500}
   header .themes i{color:var(--text);font-style:normal;font-weight:500}
   header .spacer{flex:1}
-  #connState{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.18em;color:var(--dim);white-space:nowrap}
-  #connState b{display:inline-block;width:8px;height:8px;background:#444;margin-right:7px;vertical-align:0}
-  #connState.live{color:var(--text)}
-  #connState.live b{background:var(--pink)}
   button{background:transparent;color:var(--text);border:1px solid var(--line);
     padding:8px 14px;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;cursor:pointer}
   button:hover{border-color:var(--pink);color:var(--pink)}
@@ -50,6 +46,7 @@
     position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover;pointer-events:none;display:block}
   .card .meta{padding:9px 10px 11px}
   .card .t{font-size:13px;font-weight:500;line-height:1.3}
+  .card .t a,#stageInfo .t a{color:inherit;text-decoration:underline;text-decoration-color:var(--pink);text-underline-offset:3px}
   .card .a{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--dim);margin-top:3px}
   .chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;
     padding:2px 7px;border:1px solid var(--line);margin-top:8px;color:var(--dim)}
@@ -106,7 +103,6 @@
     <div class="title">PCD @ GREENSBORO <span>//</span> HACK-A-THON</div>
     <div class="themes"><b>GIFT</b> / <i>FREEDOM</i></div>
     <div class="spacer"></div>
-    <div id="connState"><b></b>CONNECTING…</div>
     <button id="submitBtn" class="primary">+ SUBMIT A SKETCH</button>
     <button id="presentBtn">PRESENT</button>
   </header>
@@ -179,7 +175,7 @@ var POLL_MS = 15000;                  // Notion poll interval (Notion has no rea
 var SUPABASE_URL = "https://dzwpzdzxmxubgbpjkwlm.supabase.co";
 var SUPABASE_ANON_KEY = "sb_publishable_rDoVPU5j66MUmpD1ldwtjw_vn1MoB-g";  // publishable key, safe in frontend code
 var STORAGE_BUCKET = "pcd-gallery";   // public bucket for uploaded GIF / image / video files
-var SHOW_DEMOS = true;                // set false on event day
+var SHOW_DEMOS = false;               // demos off: gallery shows Notion rows only
 var ROTATE_MS = 15000;
 
 var sb = null;   // supabase client is used ONLY for file uploads to Storage now
@@ -295,7 +291,19 @@ function renderGallery(){
     var meta = document.createElement("div"); meta.className = "meta";
     meta.innerHTML = "<div class='t'></div><div class='a'></div><span class='" + chipClass(e.theme) + "'>" +
       e.theme + "</span>";
-    meta.querySelector(".t").textContent = e.title;
+var tEl = meta.querySelector(".t");
+    var href = e.kind === "media" ? e.mediaUrl : e.url;
+    if (href){
+      var link = document.createElement("a");
+      link.textContent = e.title;
+      link.href = href;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.addEventListener("click", function(ev){ ev.stopPropagation(); });
+      tEl.appendChild(link);
+    } else {
+      tEl.textContent = e.title;
+    }
     meta.querySelector(".a").textContent = "by " + e.name;
     card.appendChild(thumb); card.appendChild(meta);
     card.addEventListener("click", function(){ setStage(i); });
@@ -314,7 +322,19 @@ function clearStageMedia(){
 function refreshStageInfo(){
   var e = entries[current];
   if (!e) return;
-  stageInfo.querySelector(".t").textContent = e.title;
+var stEl = stageInfo.querySelector(".t");
+  stEl.innerHTML = "";
+  var sHref = e.kind === "media" ? e.mediaUrl : e.url;
+  if (sHref){
+    var sLink = document.createElement("a");
+    sLink.textContent = e.title;
+    sLink.href = sHref;
+    sLink.target = "_blank";
+    sLink.rel = "noopener";
+    stEl.appendChild(sLink);
+  } else {
+    stEl.textContent = e.title;
+  }
   var a = stageInfo.querySelector(".a");
   a.innerHTML = "";
   var bySpan = document.createElement("span");
@@ -443,15 +463,9 @@ function refreshRemote(){
     .then(function(data){
       remoteEntries = data;
       rebuildEntries(true);
-      var connEl = document.getElementById("connState");
-      connEl.innerHTML = "<b></b>NOTION LIVE";
-      connEl.classList.add("live");
     })
     .catch(function(err){
       console.warn("notion load:", err.message);
-      var connEl = document.getElementById("connState");
-      connEl.innerHTML = "<b></b>NOTION OFFLINE";
-      connEl.classList.remove("live");
     });
 }
 refreshRemote();

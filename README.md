@@ -20,6 +20,7 @@ big screen during the event.
   `pcd-gallery` (path `hackathon/...`); pasted links work as well.
 - Submission kinds: `sketch` (live p5.js / OpenProcessing link, played in an
   iframe) and `media` (GitHub link + screenshot / GIF / video).
+- Card and stage titles are links: sketch rows open the original sketch, media rows open the capture (GIF/image/video) full-size.
 
 ## Notion columns
 
@@ -35,7 +36,7 @@ big screen during the event.
 
 ## Event-day checklist
 
-- In `index.html`, set `SHOW_DEMOS = false` and redeploy (push to `main`).
+- Demos are off (`SHOW_DEMOS = false` in `index.html`); the grid shows Notion rows only.
 - Hide a piece instantly: uncheck its `显示` box in Notion.
 - Submissions from the form land in Notion directly, so they can be edited or
   hidden there by hand afterwards.
