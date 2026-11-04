@@ -6,7 +6,7 @@
 <title>PCD @ Greensboro — Hack-a-Thon Gallery</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
@@ -15,17 +15,17 @@
   }
   *{box-sizing:border-box;border-radius:0 !important}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
-    font-family:"Space Grotesk","Helvetica Neue",Helvetica,Arial,sans-serif;}
+    font-family:"DotGothic16","Helvetica Neue",Helvetica,Arial,sans-serif;}
   #app{display:flex;flex-direction:column;height:100vh}
   header{display:flex;align-items:center;gap:20px;padding:0 18px;height:54px;border-bottom:1px solid var(--line)}
   header .title{font-weight:700;letter-spacing:.12em;font-size:14px;white-space:nowrap}
   header .title span{color:var(--pink)}
-  header .themes{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.3em;color:var(--dim);white-space:nowrap}
+  header .themes{font-family:"DotGothic16",monospace;font-size:12px;letter-spacing:.3em;color:var(--dim);white-space:nowrap}
   header .themes b{color:var(--pink);font-weight:500}
   header .themes i{color:var(--text);font-style:normal;font-weight:500}
   header .spacer{flex:1}
   button{background:transparent;color:var(--text);border:1px solid var(--line);
-    padding:8px 14px;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;cursor:pointer}
+    padding:8px 14px;font-family:"DotGothic16",monospace;font-size:11px;letter-spacing:.14em;cursor:pointer}
   button:hover{border-color:var(--pink);color:var(--pink)}
   button.primary{background:var(--pink);border-color:var(--pink);color:#000;font-weight:500}
   button.primary:hover{background:#ff4d9d;color:#000}
@@ -34,7 +34,7 @@
   /* ---------- left: gallery ---------- */
   #gallery{width:50%;min-width:300px;border-right:1px solid var(--line);overflow-y:auto;
     padding:16px;background:var(--panel)}
-  #gallery h2{margin:0 2px 14px;font-family:"IBM Plex Mono",monospace;font-size:11px;
+  #gallery h2{margin:0 2px 14px;font-family:"DotGothic16",monospace;font-size:11px;
     letter-spacing:.25em;color:var(--dim);font-weight:500}
   #gallery h2 span{color:var(--pink)}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -47,8 +47,8 @@
   .card .meta{padding:9px 10px 11px}
   .card .t{font-size:13px;font-weight:500;line-height:1.3}
   .card .t a,#stageInfo .t a{color:inherit;text-decoration:underline;text-decoration-color:var(--pink);text-underline-offset:3px}
-  .card .a{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--dim);margin-top:3px}
-  .chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;
+  .card .a{font-family:"DotGothic16",monospace;font-size:11px;color:var(--dim);margin-top:3px}
+  .chip{display:inline-block;font-family:"DotGothic16",monospace;font-size:10px;letter-spacing:.2em;
     padding:2px 7px;border:1px solid var(--line);margin-top:8px;color:var(--dim)}
   .chip.gift{color:var(--pink);border-color:var(--pink)}
   .chip.freedom{color:var(--text);border-color:#666}
@@ -60,13 +60,13 @@
   #stageInfo{position:absolute;left:0;bottom:0;z-index:3;background:#000;border-top:1px solid var(--pink);
     border-right:1px solid var(--pink);padding:12px 18px 13px;max-width:80%}
   #stageInfo .t{font-size:28px;font-weight:700;line-height:1.15}
-  #stageInfo .a{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--dim);margin-top:4px}
+  #stageInfo .a{font-family:"DotGothic16",monospace;font-size:13px;color:var(--dim);margin-top:4px}
   #stageInfo .a b{color:var(--pink);font-weight:500}
   #stageBar{display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--line)}
-  #stageBar .now{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--dim);letter-spacing:.1em;white-space:nowrap}
+  #stageBar .now{font-family:"DotGothic16",monospace;font-size:11px;color:var(--dim);letter-spacing:.1em;white-space:nowrap}
   #progress{flex:1;height:2px;background:#222;overflow:hidden}
   #progressFill{height:100%;width:0%;background:var(--pink)}
-  #openOrig{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--dim);
+  #openOrig{font-family:"DotGothic16",monospace;font-size:11px;letter-spacing:.1em;color:var(--dim);
     text-decoration:none;white-space:nowrap}
   #openOrig:hover{color:var(--pink)}
   /* ---------- modal ---------- */
@@ -76,9 +76,9 @@
     max-height:90vh;overflow-y:auto;padding:24px}
   #modal h3{margin:0 0 4px;font-size:17px;font-weight:700;letter-spacing:.04em}
   #modal p.hint{margin:0 0 8px;color:var(--dim);font-size:13px;line-height:1.55}
-  label{display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--dim);margin:16px 0 6px}
+  label{display:block;font-family:"DotGothic16",monospace;font-size:10px;letter-spacing:.2em;color:var(--dim);margin:16px 0 6px}
   input[type=text],input[type=url],input[type=file]{width:100%;background:#000;border:1px solid var(--line);
-    color:var(--text);padding:10px;font-size:14px;font-family:"Space Grotesk",sans-serif;outline:none}
+    color:var(--text);padding:10px;font-size:14px;font-family:"DotGothic16",sans-serif;outline:none}
   input[type=text]:focus,input[type=url]:focus,input[type=file]:focus{border-color:var(--pink)}
   .seg{display:flex;gap:8px;margin-top:6px}
   .seg button{flex:1;padding:10px 6px}
