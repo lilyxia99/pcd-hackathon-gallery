@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PCD @ Greensboro — Hack-a-Thon Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#000; --panel:#0a0a0a; --line:#2b2b2b; --line-soft:#1c1c1c;
+    --text:#e8e8e8; --dim:#8a8a8a; --pink:#ff2e88;
+  }
+  *{box-sizing:border-box;border-radius:0 !important}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+    font-family:"Space Grotesk","Helvetica Neue",Helvetica,Arial,sans-serif;}
+  #app{display:flex;flex-direction:column;height:100vh}
+  header{display:flex;align-items:center;gap:20px;padding:0 18px;height:54px;border-bottom:1px solid var(--line)}
+  header .title{font-weight:700;letter-spacing:.12em;font-size:14px;white-space:nowrap}
+  header .title span{color:var(--pink)}
+  header .themes{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.3em;color:var(--dim);white-space:nowrap}
+  header .themes b{color:var(--pink);font-weight:500}
+  header .themes i{color:var(--text);font-style:normal;font-weight:500}
+  header .spacer{flex:1}
+  #connState{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.18em;color:var(--dim);white-space:nowrap}
+  #connState b{display:inline-block;width:8px;height:8px;background:#444;margin-right:7px;vertical-align:0}
+  #connState.live{color:var(--text)}
+  #connState.live b{background:var(--pink)}
+  button{background:transparent;color:var(--text);border:1px solid var(--line);
+    padding:8px 14px;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;cursor:pointer}
+  button:hover{border-color:var(--pink);color:var(--pink)}
+  button.primary{background:var(--pink);border-color:var(--pink);color:#000;font-weight:500}
+  button.primary:hover{background:#ff4d9d;color:#000}
+  button:disabled{opacity:.45;cursor:wait}
+  main{flex:1;display:flex;min-height:0}
+  /* ---------- left: gallery ---------- */
+  #gallery{width:50%;min-width:300px;border-right:1px solid var(--line);overflow-y:auto;
+    padding:16px;background:var(--panel)}
+  #gallery h2{margin:0 2px 14px;font-family:"IBM Plex Mono",monospace;font-size:11px;
+    letter-spacing:.25em;color:var(--dim);font-weight:500}
+  #gallery h2 span{color:var(--pink)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .card{border:1px solid var(--line-soft);cursor:pointer;background:#000}
+  .card:hover{border-color:#555}
+  .card.active{border-color:var(--pink);outline:1px solid var(--pink);outline-offset:-1px}
+  .card .thumb{aspect-ratio:4/3;background:#000;position:relative;overflow:hidden;border-bottom:1px solid var(--line-soft)}
+  .card .thumb iframe,.card .thumb img,.card .thumb video{
+    position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover;pointer-events:none;display:block}
+  .card .meta{padding:9px 10px 11px}
+  .card .t{font-size:13px;font-weight:500;line-height:1.3}
+  .card .a{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--dim);margin-top:3px}
+  .chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;
+    padding:2px 7px;border:1px solid var(--line);margin-top:8px;color:var(--dim)}
+  .chip.gift{color:var(--pink);border-color:var(--pink)}
+  .chip.freedom{color:var(--text);border-color:#666}
+  /* ---------- right: stage ---------- */
+  #stage{flex:1;display:flex;flex-direction:column;min-width:0;background:#000}
+  #stageView{flex:1;position:relative;min-height:0}
+  #stageView iframe,#stageView img,#stageView video{
+    position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:contain;background:#000}
+  #stageInfo{position:absolute;left:0;bottom:0;z-index:3;background:#000;border-top:1px solid var(--pink);
+    border-right:1px solid var(--pink);padding:12px 18px 13px;max-width:80%}
+  #stageInfo .t{font-size:28px;font-weight:700;line-height:1.15}
+  #stageInfo .a{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--dim);margin-top:4px}
+  #stageInfo .a b{color:var(--pink);font-weight:500}
+  #stageBar{display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--line)}
+  #stageBar .now{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--dim);letter-spacing:.1em;white-space:nowrap}
+  #progress{flex:1;height:2px;background:#222;overflow:hidden}
+  #progressFill{height:100%;width:0%;background:var(--pink)}
+  #openOrig{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--dim);
+    text-decoration:none;white-space:nowrap}
+  #openOrig:hover{color:var(--pink)}
+  /* ---------- modal ---------- */
+  #modalWrap{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:10}
+  #modalWrap.open{display:flex}
+  #modal{background:#0a0a0a;border:1px solid var(--line);width:min(520px,92vw);
+    max-height:90vh;overflow-y:auto;padding:24px}
+  #modal h3{margin:0 0 4px;font-size:17px;font-weight:700;letter-spacing:.04em}
+  #modal p.hint{margin:0 0 8px;color:var(--dim);font-size:13px;line-height:1.55}
+  label{display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--dim);margin:16px 0 6px}
+  input[type=text],input[type=url],input[type=file]{width:100%;background:#000;border:1px solid var(--line);
+    color:var(--text);padding:10px;font-size:14px;font-family:"Space Grotesk",sans-serif;outline:none}
+  input[type=text]:focus,input[type=url]:focus,input[type=file]:focus{border-color:var(--pink)}
+  .seg{display:flex;gap:8px;margin-top:6px}
+  .seg button{flex:1;padding:10px 6px}
+  .seg button.sel{background:var(--pink);border-color:var(--pink);color:#000;font-weight:500}
+  .seg button.sel:hover{color:#000}
+  #formErr{color:#ff5c5c;font-size:13px;min-height:18px;margin-top:12px}
+  .modalBtns{display:flex;gap:10px;margin-top:18px}
+  .modalBtns .primary{flex:1}
+  @media (max-width:760px){
+    #app{height:auto;min-height:100vh}
+    main{flex-direction:column}
+    #gallery{width:100%;min-width:0;border-right:0;border-bottom:1px solid var(--line);max-height:70vh}
+    #stageView{flex:none;height:62vh}
+    #stageInfo .t{font-size:21px}
+    header .themes{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title">PCD @ GREENSBORO <span>//</span> HACK-A-THON</div>
+    <div class="themes"><b>GIFT</b> / <i>FREEDOM</i></div>
+    <div class="spacer"></div>
+    <div id="connState"><b></b>CONNECTING…</div>
+    <button id="submitBtn" class="primary">+ SUBMIT A SKETCH</button>
+    <button id="presentBtn">PRESENT</button>
+  </header>
+  <main>
+    <aside id="gallery">
+      <h2>GALLERY — <span id="count">0</span> PIECES</h2>
+      <div class="grid" id="grid"></div>
+    </aside>
+    <section id="stage">
+      <div id="stageView">
+        <div id="stageInfo"><div class="t"></div><div class="a"></div></div>
+      </div>
+      <div id="stageBar">
+        <button id="prevBtn" title="Previous">PREV</button>
+        <button id="playBtn" title="Pause / play">PAUSE</button>
+        <button id="nextBtn" title="Next">NEXT</button>
+        <div id="progress"><div id="progressFill"></div></div>
+        <div class="now" id="nowLabel"></div>
+        <a id="openOrig" href="#" target="_blank" rel="noopener">OPEN ORIGINAL</a>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modalWrap">
+  <div id="modal">
+    <h3>Submit your piece</h3>
+    <p class="hint">p5.js is recommended — your sketch plays live in the gallery.
+      Built it in Processing or another tool? Choose “GitHub + capture” and add a screenshot or a video/GIF of it running.</p>
+    <label>YOUR NAME</label>
+    <input type="text" id="fName" placeholder="e.g. Alex Rivera">
+    <label>TITLE OF YOUR PIECE</label>
+    <input type="text" id="fTitle" placeholder="e.g. A Small Gift">
+    <label>THEME</label>
+    <div class="seg" id="themeSeg">
+      <button data-v="GIFT" class="sel">GIFT</button>
+      <button data-v="FREEDOM">FREEDOM</button>
+    </div>
+    <label>SUBMISSION TYPE</label>
+    <div class="seg" id="kindSeg">
+      <button data-v="sketch" class="sel">LIVE SKETCH</button>
+      <button data-v="media">GITHUB + CAPTURE</button>
+    </div>
+    <div id="sketchFields">
+      <label>SKETCH LINK OR EMBED CODE — P5.JS EDITOR / OPENPROCESSING</label>
+      <input type="text" id="fLink" placeholder="Paste the sketch link — or the whole embed code">
+    </div>
+    <div id="mediaFields" style="display:none">
+      <label>GITHUB LINK</label>
+      <input type="url" id="fGithub" placeholder="https://github.com/you/your-project">
+      <label>SCREENSHOT / GIF / VIDEO LINK</label>
+      <input type="url" id="fMedia" placeholder="Direct link to an image, GIF, MP4 or WebM of it running">
+      <label>OR UPLOAD A FILE — GIF / IMAGE / VIDEO (≤10MB)</label>
+      <input type="file" id="fFile" accept="image/*,video/*">
+      <p class="hint">Uploaded files go to the gallery image host and the link is attached to your entry automatically. If you pick both a file and a link, the upload wins.</p>
+    </div>
+    <div id="formErr"></div>
+    <div class="modalBtns">
+      <button id="cancelBtn">CANCEL</button>
+      <button id="addBtn" class="primary">ADD TO GALLERY</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= config ================= */
+var API_URL = "/api/submissions";     // Vercel proxy -> Notion database "PCD Hackathon"
+var POLL_MS = 15000;                  // Notion poll interval (Notion has no realtime push)
+var SUPABASE_URL = "https://dzwpzdzxmxubgbpjkwlm.supabase.co";
+var SUPABASE_ANON_KEY = "sb_publishable_rDoVPU5j66MUmpD1ldwtjw_vn1MoB-g";  // publishable key, safe in frontend code
+var STORAGE_BUCKET = "pcd-gallery";   // public bucket for uploaded GIF / image / video files
+var SHOW_DEMOS = true;                // set false on event day
+var ROTATE_MS = 15000;
+
+var sb = null;   // supabase client is used ONLY for file uploads to Storage now
+if (SUPABASE_ANON_KEY && window.supabase){
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+/* ================= demo sketches (inline p5) ================= */
+function srcdocFor(fn){
+  var code = "(" + fn.toString() + ")();";
+  return "<!doctype html><html><head><meta charset='utf-8'><style>" +
+    "html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style>" +
+    "<script src='https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js'><\/script>" +
+    "</head><body><script>" + code + "<\/script></body></html>";
+}
+function demoRibbon(){
+  window.setup = function(){ createCanvas(windowWidth, windowHeight); background(0); };
+  window.draw = function(){
+    fill(0,0,0,26); rect(0,0,width,height); noFill();
+    var t = frameCount * 0.008;
+    for (var k = 0; k < 3; k++){
+      stroke(255, 120 + k*40, 150 + k*30, 210);
+      strokeWeight(2);
+      beginShape();
+      for (var x = 0; x <= width; x += 14){
+        var y = height*0.5 + sin(x*0.006 + t*2 + k*2.1) * height*0.18 * sin(t + k);
+        vertex(x, y);
+      }
+      endShape();
+    }
+  };
+}
+function demoRelease(){
+  var ps = [];
+  window.setup = function(){ createCanvas(windowWidth, windowHeight); background(0); };
+  window.draw = function(){
+    fill(0,0,0,30); rect(0,0,width,height); noStroke();
+    if (frameCount % 3 === 0 && ps.length < 220)
+      ps.push({x: width/2 + random(-30,30), y: height + 6, vx: random(-0.4,0.4), vy: random(-2.6,-1.4), s: random(2,5)});
+    for (var i = ps.length-1; i >= 0; i--){
+      var p = ps[i];
+      p.x += p.vx + sin(frameCount*0.05 + i)*0.7; p.y += p.vy; p.vy -= 0.004;
+      fill(255, 46, 136, 220); circle(p.x, p.y, p.s);
+      if (p.y < -10) ps.splice(i,1);
+    }
+  };
+}
+function demoPulse(){
+  window.setup = function(){ createCanvas(windowWidth, windowHeight); background(0); };
+  window.draw = function(){
+    background(0);
+    var cx = width/2, cy = height/2, base = min(width,height);
+    noFill();
+    for (var r = 0; r < 9; r++){
+      var rad = (sin(frameCount*0.02 + r*0.7)*0.5+0.5) * base*0.05 + r*base*0.045;
+      stroke(255, 46 + r*10, 136, 210 - r*16); strokeWeight(2);
+      circle(cx, cy, rad*2);
+    }
+    fill(255); noStroke(); circle(cx, cy, 6);
+  };
+}
+
+var demoEntries = [
+  {key:"demo-ribbon", name:"Demo", title:"Ribbon for You", theme:"GIFT", kind:"srcdoc", srcdoc: srcdocFor(demoRibbon)},
+  {key:"demo-release", name:"Demo", title:"Release", theme:"FREEDOM", kind:"srcdoc", srcdoc: srcdocFor(demoRelease)},
+  {key:"demo-pulse", name:"Demo", title:"Breathing Circles", theme:"GIFT", kind:"srcdoc", srcdoc: srcdocFor(demoPulse)},
+  {key:"demo-sam", name:"Sam Daniels", title:"PCD Poster (sample live link)", theme:"FREEDOM", kind:"sketch",
+   url:"https://editor.p5js.org/SamD_p5/full/ZAqMcbG5_", vw:478, vh:750}
+];
+
+/* ================= entries state ================= */
+var remoteEntries = [];
+var entries = [];
+var current = 0, playing = true, elapsed = 0, lastTick = Date.now();
+
+function rebuildEntries(keepSelection){
+  var prevKey = (entries[current] && entries[current].key) || null;
+  entries = (SHOW_DEMOS ? demoEntries : []).concat(remoteEntries);
+  if (keepSelection && prevKey){
+    var idx = entries.findIndex(function(e){ return e.key === prevKey; });
+    if (idx >= 0){ current = idx; renderGallery(); refreshStageInfo(); return; }
+  }
+  if (current >= entries.length) current = Math.max(0, entries.length - 1);
+  if (entries.length) setStage(current); else renderGallery();
+}
+
+/* ================= gallery ================= */
+var grid = document.getElementById("grid");
+function chipClass(t){ return t === "GIFT" ? "chip gift" : "chip freedom"; }
+function renderGallery(){
+  grid.innerHTML = ""; fitTargets = [];
+  document.getElementById("count").textContent = entries.length;
+  entries.forEach(function(e, i){
+    var card = document.createElement("div");
+    card.className = "card" + (i === current ? " active" : "");
+    var thumb = document.createElement("div"); thumb.className = "thumb";
+    if (e.kind === "media"){
+      if (/\.(mp4|webm)(\?|$)/i.test(e.mediaUrl || "")){
+        var v = document.createElement("video");
+        v.src = mediaSrc(e); v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true;
+        thumb.appendChild(v);
+      } else {
+        var im = document.createElement("img"); im.src = mediaSrc(e); im.alt = e.title; thumb.appendChild(im);
+      }
+    } else {
+      var f = document.createElement("iframe");
+      f.setAttribute("loading","lazy");
+      if (e.kind === "srcdoc"){ f.setAttribute("sandbox","allow-scripts"); f.srcdoc = e.srcdoc; }
+      else { f.setAttribute("sandbox","allow-scripts allow-same-origin"); f.src = e.url; }
+      thumb.appendChild(f);
+      if (e.kind === "sketch") fitTargets.push({ w: thumb, f: f, e: e });
+    }
+    var meta = document.createElement("div"); meta.className = "meta";
+    meta.innerHTML = "<div class='t'></div><div class='a'></div><span class='" + chipClass(e.theme) + "'>" +
+      e.theme + "</span>";
+    meta.querySelector(".t").textContent = e.title;
+    meta.querySelector(".a").textContent = "by " + e.name;
+    card.appendChild(thumb); card.appendChild(meta);
+    card.addEventListener("click", function(){ setStage(i); });
+    grid.appendChild(card);
+  });
+  requestAnimationFrame(refitAll);
+}
+
+/* ================= stage ================= */
+var stageView = document.getElementById("stageView");
+var stageInfo = document.getElementById("stageInfo");
+var openOrig = document.getElementById("openOrig");
+function clearStageMedia(){
+  stageView.querySelectorAll("iframe,img,video").forEach(function(n){ n.remove(); });
+}
+function refreshStageInfo(){
+  var e = entries[current];
+  if (!e) return;
+  stageInfo.querySelector(".t").textContent = e.title;
+  var a = stageInfo.querySelector(".a");
+  a.innerHTML = "";
+  var bySpan = document.createElement("span");
+  bySpan.textContent = "by " + e.name + "  ·  ";
+  var themeB = document.createElement("b");
+  themeB.textContent = e.theme;
+  a.appendChild(bySpan); a.appendChild(themeB);
+  document.getElementById("nowLabel").textContent = (current+1) + " / " + entries.length;
+}
+function setStage(i){
+  if (!entries.length) return;
+  current = (i + entries.length) % entries.length;
+  elapsed = 0;
+  var e = entries[current];
+  clearStageMedia();
+  stageFit = null; stageView.style.height = "";
+  if (e.kind === "media"){
+    if (/\.(mp4|webm)(\?|$)/i.test(e.mediaUrl || "")){
+      var v = document.createElement("video");
+      v.src = mediaSrc(e); v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.controls = true;
+      stageView.insertBefore(v, stageInfo);
+    } else {
+      var im = document.createElement("img"); im.src = mediaSrc(e); im.alt = e.title;
+      stageView.insertBefore(im, stageInfo);
+    }
+    openOrig.href = e.codeUrl || "#";
+    openOrig.textContent = "VIEW CODE ON GITHUB";
+    openOrig.style.display = e.codeUrl ? "" : "none";
+  } else {
+    var f = document.createElement("iframe");
+    if (e.kind === "srcdoc"){ f.setAttribute("sandbox","allow-scripts"); f.srcdoc = e.srcdoc; openOrig.style.display = "none"; }
+    else { f.setAttribute("sandbox","allow-scripts allow-same-origin"); f.src = e.url; openOrig.href = e.url; openOrig.textContent = "OPEN ORIGINAL"; openOrig.style.display = ""; }
+    stageView.insertBefore(f, stageInfo);
+    if (e.kind === "sketch"){ stageFit = { w: stageView, f: f, e: e }; requestAnimationFrame(refitAll); }
+  }
+  refreshStageInfo();
+  renderGallery();
+}
+function next(){ setStage(current + 1); }
+function prev(){ setStage(current - 1); }
+
+/* ================= mobile fit =================
+   External sketch pages (p5 editor / OpenProcessing) render at their own pixel
+   size and get cropped on narrow screens. On mobile, load them in a desktop-size
+   virtual viewport and scale the whole frame down to the container width, so the
+   entire frame is always visible. Desktop keeps the plain fill layout. */
+var FIT_VW = 760, FIT_VH = 960;   // default virtual viewport; entries may carry their own vw/vh
+var fitTargets = [];
+var stageFit = null;
+function fitThumb(t){
+  var VW = t.e.vw || FIT_VW, VH = t.e.vh || FIT_VH;
+  var bw = t.w.clientWidth, bh = t.w.clientHeight;
+  if (!bw || !bh) return;
+  var s = Math.min(bw / VW, bh / VH);
+  t.f.style.width = VW + "px";
+  t.f.style.height = VH + "px";
+  t.f.style.transformOrigin = "0 0";
+  t.f.style.transform = "scale(" + s + ")";
+  t.f.style.left = Math.round((bw - VW * s) / 2) + "px";
+  t.f.style.top = Math.round((bh - VH * s) / 2) + "px";
+}
+function applyFit(t){
+  if (!t) return;
+  var mobile = window.matchMedia("(max-width: 760px)").matches;
+  if (!mobile || t.e.kind !== "sketch"){
+    t.f.style.width = ""; t.f.style.height = "";
+    t.f.style.transform = ""; t.f.style.transformOrigin = "";
+    t.w.style.height = "";
+    return;
+  }
+  var VW = t.e.vw || FIT_VW, VH = t.e.vh || FIT_VH;
+  var cw = t.w.clientWidth || 320;
+  var s = cw / VW;
+  t.f.style.width = VW + "px";
+  t.f.style.height = VH + "px";
+  t.f.style.transformOrigin = "0 0";
+  t.f.style.transform = "scale(" + s + ")";
+  t.w.style.height = Math.round(VH * s) + "px";
+}
+function refitAll(){
+  fitTargets.forEach(fitThumb);
+  applyFit(stageFit);
+}
+var fitRaf = null;
+window.addEventListener("resize", function(){
+  if (fitRaf) cancelAnimationFrame(fitRaf);
+  fitRaf = requestAnimationFrame(refitAll);
+});
+
+/* ================= rotation ================= */
+setInterval(function(){
+  var now = Date.now(), dt = now - lastTick; lastTick = now;
+  if (playing && entries.length > 1 && !document.getElementById("modalWrap").classList.contains("open")){
+    elapsed += dt;
+    if (elapsed >= ROTATE_MS){ next(); }
+  }
+  document.getElementById("progressFill").style.width = Math.min(100, elapsed / ROTATE_MS * 100) + "%";
+}, 100);
+
+document.getElementById("nextBtn").addEventListener("click", next);
+document.getElementById("prevBtn").addEventListener("click", prev);
+document.getElementById("playBtn").addEventListener("click", function(){
+  playing = !playing;
+  this.textContent = playing ? "PAUSE" : "PLAY";
+});
+document.getElementById("presentBtn").addEventListener("click", function(){
+  var el = document.documentElement;
+  if (document.fullscreenElement) document.exitFullscreen();
+  else if (el.requestFullscreen) el.requestFullscreen();
+});
+document.addEventListener("keydown", function(ev){
+  if (document.getElementById("modalWrap").classList.contains("open")) return;
+  if (ev.key === "ArrowRight") next();
+  if (ev.key === "ArrowLeft") prev();
+});
+
+/* ================= notion sync (via proxy, polled) ================= */
+function mediaSrc(e){
+  if (!e.mediaUrl) return "";
+  if (!e.edited) return e.mediaUrl;
+  return e.mediaUrl + (e.mediaUrl.indexOf("?") >= 0 ? "&" : "?") + "v=" + e.edited;
+}
+function refreshRemote(){
+  fetch(API_URL, { cache: "no-store" })
+    .then(function(r){ if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(function(data){
+      remoteEntries = data;
+      rebuildEntries(true);
+      var connEl = document.getElementById("connState");
+      connEl.innerHTML = "<b></b>NOTION LIVE";
+      connEl.classList.add("live");
+    })
+    .catch(function(err){
+      console.warn("notion load:", err.message);
+      var connEl = document.getElementById("connState");
+      connEl.innerHTML = "<b></b>NOTION OFFLINE";
+      connEl.classList.remove("live");
+    });
+}
+refreshRemote();
+setInterval(refreshRemote, POLL_MS);
+
+/* ================= submit ================= */
+var modalWrap = document.getElementById("modalWrap");
+function segWire(id, fn){
+  var seg = document.getElementById(id);
+  seg.querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){
+      seg.querySelectorAll("button").forEach(function(x){ x.classList.remove("sel"); });
+      b.classList.add("sel"); fn(b.dataset.v);
+    });
+  });
+  return function(){ return seg.querySelector("button.sel").dataset.v; };
+}
+var getTheme = segWire("themeSeg", function(){});
+var getKind = segWire("kindSeg", function(v){
+  document.getElementById("sketchFields").style.display = v === "sketch" ? "" : "none";
+  document.getElementById("mediaFields").style.display = v === "media" ? "" : "none";
+});
+document.getElementById("submitBtn").addEventListener("click", function(){ modalWrap.classList.add("open"); });
+document.getElementById("cancelBtn").addEventListener("click", function(){ modalWrap.classList.remove("open"); });
+modalWrap.addEventListener("click", function(ev){ if (ev.target === modalWrap) modalWrap.classList.remove("open"); });
+
+function normalizeSketch(input){
+  var s = (input || "").trim();
+  var m = s.match(/src\s*=\s*"([^"]+)"/i) || s.match(/src\s*=\s*'([^']+)'/i);
+  if (m) s = m[1];
+  var u;
+  try { u = new URL(s); } catch(e){ return null; }
+  if (u.hostname === "editor.p5js.org"){
+    u.pathname = u.pathname.replace("/sketches/","/full/").replace("/present/","/full/").replace("/embed/","/full/");
+    return u.toString();
+  }
+  if (u.hostname === "openprocessing.org" || u.hostname === "www.openprocessing.org"){
+    var mm = u.pathname.match(/\/sketch\/(\d+)/);
+    if (mm) return "https://openprocessing.org/sketch/" + mm[1] + "/embed/";
+  }
+  return null;
+}
+document.getElementById("addBtn").addEventListener("click", function(){
+  var err = document.getElementById("formErr");
+  var addBtn = this;
+  var name = document.getElementById("fName").value.trim();
+  var title = document.getElementById("fTitle").value.trim();
+  if (!name || !title){ err.textContent = "Please add your name and a title."; return; }
+  var kind = getKind();
+  var body = { name: name, title: title, theme: getTheme(), kind: kind };
+  if (kind === "sketch"){
+    var url = normalizeSketch(document.getElementById("fLink").value);
+    if (!url){ err.textContent = "That link doesn't look like a p5.js editor or OpenProcessing sketch. Paste the sketch link or its embed code."; return; }
+    body.sketch_url = url;
+    postEntry(body, addBtn, err);
+  } else {
+    var gh = document.getElementById("fGithub").value.trim();
+    var media = document.getElementById("fMedia").value.trim();
+    var file = document.getElementById("fFile").files[0];
+    if (!gh || (!media && !file)){ err.textContent = "For GitHub + capture, add the GitHub link and either a screenshot/GIF/video link or an uploaded file."; return; }
+    body.code_url = gh;
+    if (file){
+      if (file.size > 10 * 1024 * 1024){ err.textContent = "That file is over 10MB. Please use a smaller GIF or paste a link instead."; return; }
+      if (!sb){ err.textContent = "Upload is unavailable right now. Paste a link instead."; return; }
+      err.textContent = "";
+      addBtn.disabled = true; addBtn.textContent = "UPLOADING…";
+      var safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      var path = "hackathon/" + Date.now() + "-" + safe;
+      sb.storage.from(STORAGE_BUCKET).upload(path, file, { upsert: false })
+        .then(function(res){
+          if (res.error) throw new Error(res.error.message);
+          body.media_url = SUPABASE_URL + "/storage/v1/object/public/" + STORAGE_BUCKET + "/" + res.data.path;
+          addBtn.textContent = "SUBMITTING…";
+          return postEntry(body, addBtn, err);
+        })
+        .catch(function(ex){ addBtn.disabled = false; addBtn.textContent = "ADD TO GALLERY"; err.textContent = "Upload failed: " + ex.message; });
+    } else {
+      body.media_url = media;
+      postEntry(body, addBtn, err);
+    }
+  }
+});
+function postEntry(body, addBtn, err){
+  err.textContent = "";
+  addBtn.disabled = true; addBtn.textContent = "SUBMITTING…";
+  return fetch(API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+    .then(function(r){ return r.json().then(function(j){ if (!r.ok) throw new Error(j.error || ("HTTP " + r.status)); return j; }); })
+    .then(function(){
+      addBtn.disabled = false; addBtn.textContent = "ADD TO GALLERY";
+      modalWrap.classList.remove("open");
+      document.getElementById("fFile").value = "";
+      refreshRemote();
+    })
+    .catch(function(ex){
+      addBtn.disabled = false; addBtn.textContent = "ADD TO GALLERY";
+      err.textContent = "Submission failed: " + ex.message;
+    });
+}
+
+/* ================= go ================= */
+rebuildEntries(false);
+</script>
+</body>
+</html>
