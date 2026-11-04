@@ -6,7 +6,7 @@
 //   POST /api/submissions -> create one entry (always visible)
 //
 // Notion property map (database "PCD Hackathon"; its data source is 40e401da-165b-80a3-b3f4-000ba4c02f58):
-//   Name (title), 作者 (text), 主题 (select GIFT/FREEDOM),
+//   Name (title), 作者 (text), 主题 (select GIFT/FREEDOM/exhibition),
 //   类型 (select sketch/media), 作品链接 (url), GitHub (url),
 //   截图/GIF (url), 显示 (checkbox)
 
@@ -119,7 +119,7 @@ module.exports = async function (req, res) {
       var name = (b.name || "").trim();
       var title = (b.title || "").trim();
       if (!name || !title) { res.status(400).json({ error: "name and title are required" }); return; }
-      if (b.theme !== "GIFT" && b.theme !== "FREEDOM") { res.status(400).json({ error: "theme must be GIFT or FREEDOM" }); return; }
+      if (b.theme !== "GIFT" && b.theme !== "FREEDOM" && b.theme !== "exhibition") { res.status(400).json({ error: "theme must be GIFT, FREEDOM or exhibition" }); return; }
       if (b.kind !== "sketch" && b.kind !== "media") { res.status(400).json({ error: "kind must be sketch or media" }); return; }
       if (b.kind === "sketch" && !b.sketch_url) { res.status(400).json({ error: "sketch_url is required" }); return; }
       if (b.kind === "media" && (!b.code_url || !b.media_url)) { res.status(400).json({ error: "code_url and media_url are required" }); return; }
