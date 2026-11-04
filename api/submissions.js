@@ -68,7 +68,7 @@ async function queryVisible() {
     if (!r.ok) {
       var t = await r.text();
       var e = new Error("Notion query failed: " + r.status + " " + t.slice(0, 300));
-      e.status = 502;
+      e.status = r.status;
       throw e;
     }
     var j = await r.json();
@@ -98,7 +98,7 @@ async function createEntry(b) {
   if (!r.ok) {
     var t = await r.text();
     var e = new Error("Notion create failed: " + r.status + " " + t.slice(0, 300));
-    e.status = 502;
+    e.status = r.status;
     throw e;
   }
   return toEntry(await r.json());
