@@ -21,8 +21,9 @@
   header .title{font-weight:700;letter-spacing:.12em;font-size:14px;white-space:nowrap}
   header .title span{color:var(--pink)}
   header .themes{font-family:"DotGothic16",monospace;font-size:12px;letter-spacing:.3em;color:var(--dim);white-space:nowrap}
-  header .themes b{color:var(--pink);font-weight:500}
-  header .themes i{color:var(--text);font-style:normal;font-weight:500}
+  header .themes button{background:transparent;border:0;color:var(--dim);font:inherit;letter-spacing:inherit;cursor:pointer;padding:2px 4px}
+  header .themes button.sel{color:var(--pink)}
+  header .themes button:hover{color:var(--text)}
   header .spacer{flex:1}
   button{background:transparent;color:var(--text);border:1px solid var(--line);
     padding:8px 14px;font-family:"DotGothic16",monospace;font-size:11px;letter-spacing:.14em;cursor:pointer}
@@ -101,7 +102,7 @@
 <div id="app">
   <header>
     <div class="title">PCD @ GREENSBORO <span>//</span> HACK-A-THON</div>
-    <div class="themes"><b>GIFT</b> / <i>FREEDOM</i></div>
+    <div class="themes" id="filterSeg"><button data-mode="themes" class="sel">GIFT / FREEDOM</button><span> / </span><button data-mode="exhibition">EXHIBITION</button></div>
     <div class="spacer"></div>
     <button id="submitBtn" class="primary">+ SUBMIT A SKETCH</button>
     <button id="presentBtn">PRESENT</button>
@@ -248,18 +249,31 @@ var demoEntries = [
 
 /* ================= entries state ================= */
 var remoteEntries = [];
+var filterMode = "themes";  // "themes" = GIFT + FREEDOM, "exhibition" = exhibition rows only
 var entries = [];
 var current = 0, playing = true, elapsed = 0, lastTick = Date.now();
 
 function rebuildEntries(keepSelection){
   var prevKey = (entries[current] && entries[current].key) || null;
-  entries = (SHOW_DEMOS ? demoEntries : []).concat(remoteEntries);
+  var all = (SHOW_DEMOS ? demoEntries : []).concat(remoteEntries);
+  entries = all.filter(function(e){
+    return filterMode === "exhibition" ? e.theme === "exhibition" : (e.theme === "GIFT" || e.theme === "FREEDOM");
+  });
   if (keepSelection && prevKey){
     var idx = entries.findIndex(function(e){ return e.key === prevKey; });
     if (idx >= 0){ current = idx; renderGallery(); refreshStageInfo(); return; }
   }
   if (current >= entries.length) current = Math.max(0, entries.length - 1);
-  if (entries.length) setStage(current); else renderGallery();
+  if (entries.length) setStage(current);
+  else {
+    renderGallery();
+    clearStageMedia();
+    stageFit = null;
+    stageInfo.querySelector(".t").textContent = "";
+    stageInfo.querySelector(".a").textContent = "";
+    document.getElementById("nowLabel").textContent = "0 / 0";
+    openOrig.style.display = "none";
+  }
 }
 
 /* ================= gallery ================= */
@@ -563,6 +577,20 @@ function postEntry(body, addBtn, err){
       addBtn.disabled = false; addBtn.textContent = "ADD TO GALLERY";
       err.textContent = "Submission failed: " + ex.message;
     });
+}
+
+/* ================= theme filter ================= */
+var filterSeg = document.getElementById("filterSeg");
+if (filterSeg){
+  filterSeg.querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){
+      filterSeg.querySelectorAll("button").forEach(function(x){ x.classList.remove("sel"); });
+      b.classList.add("sel");
+      filterMode = b.dataset.mode;
+      current = 0;
+      rebuildEntries(false);
+    });
+  });
 }
 
 /* ================= go ================= */
