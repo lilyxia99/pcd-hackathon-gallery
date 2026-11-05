@@ -294,6 +294,8 @@ function renderGallery(){
       } else {
         var im = document.createElement("img"); im.src = mediaSrc(e); im.alt = e.title; thumb.appendChild(im);
       }
+    } else if (e.kind === "sketch" && e.mediaUrl) {
+      var im = document.createElement("img"); im.src = mediaSrc(e); im.alt = e.title; thumb.appendChild(im);
     } else {
       var f = document.createElement("iframe");
       f.setAttribute("loading","lazy");
@@ -377,6 +379,10 @@ function setStage(i){
     openOrig.href = e.codeUrl || "#";
     openOrig.textContent = "VIEW CODE ON GITHUB";
     openOrig.style.display = e.codeUrl ? "" : "none";
+  } else if (e.kind === "sketch" && e.mediaUrl) {
+    var im = document.createElement("img"); im.src = mediaSrc(e); im.alt = e.title;
+    stageView.insertBefore(im, stageInfo);
+    openOrig.href = e.url; openOrig.textContent = "OPEN ORIGINAL"; openOrig.style.display = "";
   } else {
     var f = document.createElement("iframe");
     if (e.kind === "srcdoc"){ f.setAttribute("sandbox","allow-scripts"); f.srcdoc = e.srcdoc; openOrig.style.display = "none"; }

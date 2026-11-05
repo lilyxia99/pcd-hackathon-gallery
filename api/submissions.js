@@ -4,7 +4,7 @@
 // it lives only in the Vercel project's NOTION_TOKEN environment variable.
 //   GET  /api/submissions -> visible entries, oldest first
 //   POST /api/submissions -> create one entry (always visible)
-//   PATCH /api/submissions?key=<page id> {sketch_url} -> update that entry's 作品链接
+//   PATCH /api/submissions?key=<page id> {sketch_url, media_url} -> update that entry's 作品链接 and/or 截图/GIF
 //
 // Notion property map (database "PCD Hackathon"; its data source is 40e401da-165b-80a3-b3f4-000ba4c02f58):
 //   Name (title), 作者 (text), 主题 (select GIFT/FREEDOM/exhibition),
@@ -105,11 +105,14 @@ async function createEntry(b) {
   return toEntry(await r.json());
 }
 
-async function updateEntryUrl(key, sketchUrl) {
+async function updateEntry(key, fields) {
+  var props = {};
+  if (fields.sketchUrl) props["作品链接"] = { url: fields.sketchUrl };
+  if (fields.mediaUrl) props["截图/GIF"] = { url: fields.mediaUrl };
   var r = await fetch("https://api.notion.com/v1/pages/" + encodeURIComponent(key), {
     method: "PATCH",
     headers: notionHeaders(),
-    body: JSON.stringify({ properties: { "作品链接": { url: sketchUrl } } }),
+    body: JSON.stringify({ properties: props }),
   });
   if (!r.ok) {
     var t = await r.text();
@@ -153,9 +156,12 @@ module.exports = async function (req, res) {
         if (m) key = decodeURIComponent(m[1]);
       }
       var sketchUrl = (pb.sketch_url || "").trim();
+      var mediaUrl = (pb.media_url || "").trim();
       if (!key) { res.status(400).json({ error: "key query param is required" }); return; }
-      if (!/^https:\/\//.test(sketchUrl)) { res.status(400).json({ error: "sketch_url must be an https URL" }); return; }
-      res.status(200).json(await updateEntryUrl(key, sketchUrl));
+      if (sketchUrl && !/^https:\/\//.test(sketchUrl)) { res.status(400).json({ error: "sketch_url must be an https URL" }); return; }
+      if (mediaUrl && !/^https:\/\//.test(mediaUrl)) { res.status(400).json({ error: "media_url must be an https URL" }); return; }
+      if (!sketchUrl && !mediaUrl) { res.status(400).json({ error: "sketch_url or media_url is required" }); return; }
+      res.status(200).json(await updateEntry(key, { sketchUrl: sketchUrl, mediaUrl: mediaUrl }));
       return;
     }
     res.status(405).json({ error: "method not allowed" });
