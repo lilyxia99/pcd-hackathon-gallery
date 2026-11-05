@@ -109,6 +109,7 @@ async function updateEntry(key, fields) {
   var props = {};
   if (fields.sketchUrl) props["作品链接"] = { url: fields.sketchUrl };
   if (fields.mediaUrl) props["截图/GIF"] = { url: fields.mediaUrl };
+  if (fields.clearMedia) props["截图/GIF"] = { url: null };
   var r = await fetch("https://api.notion.com/v1/pages/" + encodeURIComponent(key), {
     method: "PATCH",
     headers: notionHeaders(),
@@ -156,12 +157,14 @@ module.exports = async function (req, res) {
         if (m) key = decodeURIComponent(m[1]);
       }
       var sketchUrl = (pb.sketch_url || "").trim();
-      var mediaUrl = (pb.media_url || "").trim();
+      var hasMedia = pb && ("media_url" in pb);
+      var mediaUrl = hasMedia && pb.media_url ? String(pb.media_url).trim() : "";
+      var clearMedia = hasMedia && pb.media_url == null;
       if (!key) { res.status(400).json({ error: "key query param is required" }); return; }
       if (sketchUrl && !/^https:\/\//.test(sketchUrl)) { res.status(400).json({ error: "sketch_url must be an https URL" }); return; }
       if (mediaUrl && !/^https:\/\//.test(mediaUrl)) { res.status(400).json({ error: "media_url must be an https URL" }); return; }
-      if (!sketchUrl && !mediaUrl) { res.status(400).json({ error: "sketch_url or media_url is required" }); return; }
-      res.status(200).json(await updateEntry(key, { sketchUrl: sketchUrl, mediaUrl: mediaUrl }));
+      if (!sketchUrl && !mediaUrl && !clearMedia) { res.status(400).json({ error: "sketch_url or media_url is required" }); return; }
+      res.status(200).json(await updateEntry(key, { sketchUrl: sketchUrl, mediaUrl: mediaUrl, clearMedia: clearMedia }));
       return;
     }
     res.status(405).json({ error: "method not allowed" });
