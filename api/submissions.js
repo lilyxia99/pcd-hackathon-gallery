@@ -4,6 +4,7 @@
 // it lives only in the Vercel project's NOTION_TOKEN environment variable.
 //   GET  /api/submissions -> visible entries, oldest first
 //   POST /api/submissions -> create one entry (always visible)
+//   PATCH /api/submissions?key=<page id> {sketch_url} -> update that entry's 作品链接
 //
 // Notion property map (database "PCD Hackathon"; its data source is 40e401da-165b-80a3-b3f4-000ba4c02f58):
 //   Name (title), 作者 (text), 主题 (select GIFT/FREEDOM/exhibition),
@@ -104,6 +105,21 @@ async function createEntry(b) {
   return toEntry(await r.json());
 }
 
+async function updateEntryUrl(key, sketchUrl) {
+  var r = await fetch("https://api.notion.com/v1/pages/" + encodeURIComponent(key), {
+    method: "PATCH",
+    headers: notionHeaders(),
+    body: JSON.stringify({ properties: { "作品链接": { url: sketchUrl } } }),
+  });
+  if (!r.ok) {
+    var t = await r.text();
+    var e = new Error("Notion update failed: " + r.status + " " + t.slice(0, 300));
+    e.status = r.status;
+    throw e;
+  }
+  return toEntry(await r.json());
+}
+
 module.exports = async function (req, res) {
   try {
     if (req.method === "GET") {
@@ -124,6 +140,22 @@ module.exports = async function (req, res) {
       if (b.kind === "sketch" && !b.sketch_url) { res.status(400).json({ error: "sketch_url is required" }); return; }
       if (b.kind === "media" && (!b.code_url || !b.media_url)) { res.status(400).json({ error: "code_url and media_url are required" }); return; }
       res.status(201).json(await createEntry(b));
+      return;
+    }
+    if (req.method === "PATCH") {
+      var pb = req.body || {};
+      if (typeof pb === "string") {
+        try { pb = JSON.parse(pb); } catch (e) { pb = {}; }
+      }
+      var key = (req.query && req.query.key) || null;
+      if (!key && req.url) {
+        var m = /[?&]key=([^&]+)/.exec(req.url);
+        if (m) key = decodeURIComponent(m[1]);
+      }
+      var sketchUrl = (pb.sketch_url || "").trim();
+      if (!key) { res.status(400).json({ error: "key query param is required" }); return; }
+      if (!/^https:\/\//.test(sketchUrl)) { res.status(400).json({ error: "sketch_url must be an https URL" }); return; }
+      res.status(200).json(await updateEntryUrl(key, sketchUrl));
       return;
     }
     res.status(405).json({ error: "method not allowed" });
