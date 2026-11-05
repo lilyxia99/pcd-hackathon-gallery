@@ -249,7 +249,7 @@ var demoEntries = [
 
 /* ================= entries state ================= */
 var remoteEntries = [];
-var filterMode = "themes";  // "themes" = GIFT + FREEDOM, "exhibition" = exhibition rows only
+var filterMode = "themes";  // "themes" = all non-exhibition (hackathon submissions), "exhibition" = exhibition rows only
 var entries = [];
 var current = 0, playing = true, elapsed = 0, lastTick = Date.now();
 
@@ -257,7 +257,7 @@ function rebuildEntries(keepSelection){
   var prevKey = (entries[current] && entries[current].key) || null;
   var all = (SHOW_DEMOS ? demoEntries : []).concat(remoteEntries);
   entries = all.filter(function(e){
-    return filterMode === "exhibition" ? e.theme === "exhibition" : (e.theme === "GIFT" || e.theme === "FREEDOM");
+    return filterMode === "exhibition" ? e.theme === "exhibition" : e.theme !== "exhibition";
   });
   if (keepSelection && prevKey){
     var idx = entries.findIndex(function(e){ return e.key === prevKey; });
