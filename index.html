@@ -81,6 +81,9 @@
     max-height:90vh;overflow-y:auto;padding:24px}
   #modal h3{margin:0 0 4px;font-size:17px;font-weight:700;letter-spacing:.04em}
   #modal p.hint{margin:0 0 8px;color:var(--dim);font-size:13px;line-height:1.55}
+  #modal .codebox{position:relative;margin-top:10px;background:#000;border:1px solid var(--line);padding:12px;text-align:left}
+  #modal .codebox pre{margin:0;font-family:monospace;font-size:11px;line-height:1.6;color:#d7f75b;white-space:pre-wrap;word-break:break-word;padding-right:56px}
+  #modal .codebox button{position:absolute;top:8px;right:8px;background:var(--pink);color:#fff;border:0;padding:4px 10px;font-family:"DotGothic16",monospace;font-size:11px;letter-spacing:.1em;cursor:pointer}
   label{display:block;font-family:"DotGothic16",monospace;font-size:10px;letter-spacing:.2em;color:var(--dim);margin:16px 0 6px}
   input[type=text],input[type=url],input[type=file]{width:100%;background:#000;border:1px solid var(--line);
     color:var(--text);padding:10px;font-size:14px;font-family:"DotGothic16",sans-serif;outline:none}
@@ -160,6 +163,19 @@
     <div id="mediaFields" style="display:none">
       <label>UPLOAD A GIF — OF YOUR SKETCH RUNNING (≤10MB)</label>
       <input type="file" id="fGif" accept="image/gif,video/mp4,video/webm">
+      <p class="hint" style="margin-top:10px"><b style="color:var(--text)">CHEAT CODE — save a GIF from your sketch:</b><br>Paste the code below at the very bottom of your sketch (outside <span style="color:var(--text)">draw()</span>), click the sketch canvas, then press <b style="color:var(--text)">S</b> for a 5-second GIF or <b style="color:var(--text)">P</b> for a still image.</p>
+      <div class="codebox">
+        <button type="button" id="copyCheatBtn">COPY</button>
+        <pre id="cheatCode">// Save a 5-second gif when the user presses the 's' key.
+function keyPressed() {
+  if (key === 's') {
+    saveGif('mySketchGif', 5);
+  }
+  if (key === 'p') {
+    save('mySketchImage.png');
+  }
+}</pre>
+      </div>
       <label>OR UPLOAD A SCREENSHOT — PNG / JPG (≤10MB)</label>
       <input type="file" id="fShot" accept="image/*">
       <label>OR PASTE A LINK — GIF / IMAGE / VIDEO</label>
@@ -519,6 +535,23 @@ var getKind = segWire("kindSeg", function(v){
   document.getElementById("mediaFields").style.display = v === "media" ? "" : "none";
 });
 document.getElementById("submitBtn").addEventListener("click", function(){ modalWrap.classList.add("open"); });
+document.getElementById("copyCheatBtn").addEventListener("click", function(){
+  var code = document.getElementById("cheatCode").innerText;
+  var done = function(){
+    var b = document.getElementById("copyCheatBtn");
+    b.textContent = "COPIED ✓";
+    setTimeout(function(){ b.textContent = "COPY"; }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(done, function(){ fallbackCopy(code); done(); });
+  } else { fallbackCopy(code); done(); }
+  function fallbackCopy(t){
+    var ta = document.createElement("textarea");
+    ta.value = t; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch(e){}
+    document.body.removeChild(ta);
+  }
+});
 document.getElementById("cancelBtn").addEventListener("click", function(){ modalWrap.classList.remove("open"); });
 modalWrap.addEventListener("click", function(ev){ if (ev.target === modalWrap) modalWrap.classList.remove("open"); });
 
