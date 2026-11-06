@@ -25,6 +25,10 @@
   header .themes button.sel{color:var(--pink)}
   header .themes button:hover{color:var(--text)}
   header .spacer{flex:1}
+  header .p5links{flex:1;text-align:center;font-family:"DotGothic16",monospace;font-size:12px;letter-spacing:.15em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header .p5links a{color:var(--dim);text-decoration:none}
+  header .p5links a:hover{color:var(--pink)}
+  header .p5links span{color:var(--dim)}
   button{background:transparent;color:var(--text);border:1px solid var(--line);
     padding:8px 14px;font-family:"DotGothic16",monospace;font-size:11px;letter-spacing:.14em;cursor:pointer}
   button:hover{border-color:var(--pink);color:var(--pink)}
@@ -96,6 +100,7 @@
     #stageView{flex:none;height:62vh}
     #stageInfo .t{font-size:21px}
     header .themes{display:none}
+    header .p5links{display:none}
   }
 </style>
 </head>
@@ -104,7 +109,7 @@
   <header>
     <div class="title">PCD @ GREENSBORO <span>//</span> HACK-A-THON</div>
     <div class="themes" id="filterSeg"><button data-mode="themes" class="sel">GIFT / FREEDOM</button><span> / </span><button data-mode="exhibition">EXHIBITION</button></div>
-    <div class="spacer"></div>
+    <div class="p5links"><a href="https://p5js.org" target="_blank" rel="noopener">p5js.org</a><span> · </span><a href="https://editor.p5js.org" target="_blank" rel="noopener">editor.p5js.org</a></div>
     <button id="submitBtn" class="primary">+ SUBMIT A SKETCH</button>
     <button id="presentBtn">PRESENT</button>
   </header>
