@@ -38,7 +38,7 @@
   #gallery h2{margin:0 2px 14px;font-family:"DotGothic16",monospace;font-size:11px;
     letter-spacing:.25em;color:var(--dim);font-weight:500}
   #gallery h2 span{color:var(--pink)}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
   .card{border:1px solid var(--line-soft);cursor:pointer;background:#000}
   .card:hover{border-color:#555}
   .card.active{border-color:var(--pink);outline:1px solid var(--pink);outline-offset:-1px}
@@ -92,6 +92,7 @@
     #app{height:auto;min-height:100vh}
     main{flex-direction:column}
     #gallery{width:100%;min-width:0;border-right:0;border-bottom:1px solid var(--line);max-height:70vh}
+    .grid{grid-template-columns:1fr 1fr}
     #stageView{flex:none;height:62vh}
     #stageInfo .t{font-size:21px}
     header .themes{display:none}
