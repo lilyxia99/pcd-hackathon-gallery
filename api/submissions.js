@@ -142,7 +142,7 @@ module.exports = async function (req, res) {
       if (b.theme !== "GIFT" && b.theme !== "FREEDOM" && b.theme !== "exhibition") { res.status(400).json({ error: "theme must be GIFT, FREEDOM or exhibition" }); return; }
       if (b.kind !== "sketch" && b.kind !== "media") { res.status(400).json({ error: "kind must be sketch or media" }); return; }
       if (b.kind === "sketch" && !b.sketch_url) { res.status(400).json({ error: "sketch_url is required" }); return; }
-      if (b.kind === "media" && (!b.code_url || !b.media_url)) { res.status(400).json({ error: "code_url and media_url are required" }); return; }
+      if (b.kind === "media" && !b.media_url) { res.status(400).json({ error: "media_url is required" }); return; }
       res.status(201).json(await createEntry(b));
       return;
     }

@@ -19,7 +19,7 @@ big screen during the event.
 - GIF / image / video file uploads go to the public Supabase Storage bucket
   `pcd-gallery` (path `hackathon/...`); pasted links work as well.
 - Submission kinds: `sketch` (live p5.js / OpenProcessing link, played in an
-  iframe) and `media` (GitHub link + screenshot / GIF / video).
+  iframe) and `media` (GIF or screenshot upload, or a capture link; GitHub link optional).
 - Card and stage titles are links: sketch rows open the original sketch, media rows open the capture (GIF/image/video) full-size.
 
 ## Notion columns

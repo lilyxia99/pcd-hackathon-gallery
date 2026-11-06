@@ -132,7 +132,7 @@
   <div id="modal">
     <h3>Submit your piece</h3>
     <p class="hint">p5.js is recommended — your sketch plays live in the gallery.
-      Built it in Processing or another tool? Choose “GitHub + capture” and add a screenshot or a video/GIF of it running.</p>
+      Built it in Processing or another tool? Choose “GIF” and upload a GIF or a screenshot of it running.</p>
     <label>YOUR NAME</label>
     <input type="text" id="fName" placeholder="e.g. Alex Rivera">
     <label>TITLE OF YOUR PIECE</label>
@@ -145,20 +145,22 @@
     <label>SUBMISSION TYPE</label>
     <div class="seg" id="kindSeg">
       <button data-v="sketch" class="sel">LIVE SKETCH</button>
-      <button data-v="media">GITHUB + CAPTURE</button>
+      <button data-v="media">GIF</button>
     </div>
     <div id="sketchFields">
       <label>SKETCH LINK OR EMBED CODE — P5.JS EDITOR / OPENPROCESSING</label>
       <input type="text" id="fLink" placeholder="Paste the sketch link — or the whole embed code">
     </div>
     <div id="mediaFields" style="display:none">
-      <label>GITHUB LINK</label>
-      <input type="url" id="fGithub" placeholder="https://github.com/you/your-project">
-      <label>SCREENSHOT / GIF / VIDEO LINK</label>
+      <label>UPLOAD A GIF — OF YOUR SKETCH RUNNING (≤10MB)</label>
+      <input type="file" id="fGif" accept="image/gif,video/mp4,video/webm">
+      <label>OR UPLOAD A SCREENSHOT — PNG / JPG (≤10MB)</label>
+      <input type="file" id="fShot" accept="image/*">
+      <label>OR PASTE A LINK — GIF / IMAGE / VIDEO</label>
       <input type="url" id="fMedia" placeholder="Direct link to an image, GIF, MP4 or WebM of it running">
-      <label>OR UPLOAD A FILE — GIF / IMAGE / VIDEO (≤10MB)</label>
-      <input type="file" id="fFile" accept="image/*,video/*">
-      <p class="hint">Uploaded files go to the gallery image host and the link is attached to your entry automatically. If you pick both a file and a link, the upload wins.</p>
+      <label>GITHUB LINK (OPTIONAL)</label>
+      <input type="url" id="fGithub" placeholder="https://github.com/you/your-project">
+      <p class="hint">Uploaded files go to the gallery image host and are attached to your entry automatically. If you pick more than one, the GIF wins.</p>
     </div>
     <div id="formErr"></div>
     <div class="modalBtns">
@@ -544,9 +546,9 @@ document.getElementById("addBtn").addEventListener("click", function(){
   } else {
     var gh = document.getElementById("fGithub").value.trim();
     var media = document.getElementById("fMedia").value.trim();
-    var file = document.getElementById("fFile").files[0];
-    if (!gh || (!media && !file)){ err.textContent = "For GitHub + capture, add the GitHub link and either a screenshot/GIF/video link or an uploaded file."; return; }
-    body.code_url = gh;
+    var file = document.getElementById("fGif").files[0] || document.getElementById("fShot").files[0];
+    if (!media && !file){ err.textContent = "Add a GIF or screenshot upload, or paste a link to one."; return; }
+    if (gh) body.code_url = gh;
     if (file){
       if (file.size > 10 * 1024 * 1024){ err.textContent = "That file is over 10MB. Please use a smaller GIF or paste a link instead."; return; }
       if (!sb){ err.textContent = "Upload is unavailable right now. Paste a link instead."; return; }
@@ -576,7 +578,8 @@ function postEntry(body, addBtn, err){
     .then(function(){
       addBtn.disabled = false; addBtn.textContent = "ADD TO GALLERY";
       modalWrap.classList.remove("open");
-      document.getElementById("fFile").value = "";
+      document.getElementById("fGif").value = "";
+      document.getElementById("fShot").value = "";
       refreshRemote();
     })
     .catch(function(ex){
