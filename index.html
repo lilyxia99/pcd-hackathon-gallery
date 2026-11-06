@@ -185,7 +185,9 @@ var SUPABASE_URL = "https://dzwpzdzxmxubgbpjkwlm.supabase.co";
 var SUPABASE_ANON_KEY = "sb_publishable_rDoVPU5j66MUmpD1ldwtjw_vn1MoB-g";  // publishable key, safe in frontend code
 var STORAGE_BUCKET = "pcd-gallery";   // public bucket for uploaded GIF / image / video files
 var SHOW_DEMOS = false;               // demos off: gallery shows Notion rows only
-var ROTATE_MS = 15000;
+var ROTATE_MS = 15000;                  // hackathon (GIFT / FREEDOM) rotation
+var ROTATE_MS_EXHIBITION = 60000;       // exhibition rotation: one image per minute
+function rotateMs(){ return filterMode === "exhibition" ? ROTATE_MS_EXHIBITION : ROTATE_MS; }
 
 var sb = null;   // supabase client is used ONLY for file uploads to Storage now
 if (SUPABASE_ANON_KEY && window.supabase){
@@ -457,9 +459,9 @@ setInterval(function(){
   var now = Date.now(), dt = now - lastTick; lastTick = now;
   if (playing && entries.length > 1 && !document.getElementById("modalWrap").classList.contains("open")){
     elapsed += dt;
-    if (elapsed >= ROTATE_MS){ next(); }
+    if (elapsed >= rotateMs()){ next(); }
   }
-  document.getElementById("progressFill").style.width = Math.min(100, elapsed / ROTATE_MS * 100) + "%";
+  document.getElementById("progressFill").style.width = Math.min(100, elapsed / rotateMs() * 100) + "%";
 }, 100);
 
 document.getElementById("nextBtn").addEventListener("click", next);
